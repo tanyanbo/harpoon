@@ -15,6 +15,10 @@ local function close_menu(force_save)
     force_save = force_save or false
     local global_config = harpoon.get_global_settings()
 
+    if global_config.on_close_menu ~= nil and type(global_config.on_close_menu) == "function" then
+        global_config.on_close_menu()
+    end
+
     if global_config.save_on_toggle or force_save then
         require("harpoon.ui").on_menu_save()
     end
@@ -77,15 +81,21 @@ function M.toggle_quick_menu()
         return
     end
 
+    local global_config = harpoon.get_global_settings()
+
+    if global_config.on_open_menu ~= nil and type(global_config.on_open_menu) == "function" then
+        global_config.on_open_menu()
+    end
+
     local curr_file = utils.normalize_path(vim.api.nvim_buf_get_name(0))
     vim.cmd(
         string.format(
             "autocmd Filetype harpoon "
-                .. "let path = '%s' | call clearmatches() | "
-                -- move the cursor to the line containing the current filename
-                .. "call search('\\V'.path.'\\$') | "
-                -- add a hl group to that line
-                .. "call matchadd('HarpoonCurrentFile', '\\V'.path.'\\$')",
+            .. "let path = '%s' | call clearmatches() | "
+            -- move the cursor to the line containing the current filename
+            .. "call search('\\V'.path.'\\$') | "
+            -- add a hl group to that line
+            .. "call matchadd('HarpoonCurrentFile', '\\V'.path.'\\$')",
             curr_file:gsub("\\", "\\\\")
         )
     )
