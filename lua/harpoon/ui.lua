@@ -72,94 +72,6 @@ local function get_menu_items()
     return indices
 end
 
-function M.toggle_quick_menu()
-    log.trace("toggle_quick_menu()")
-    if Harpoon_win_id ~= nil and vim.api.nvim_win_is_valid(Harpoon_win_id) then
-        close_menu()
-        return
-    end
-
-    vim.keymap.set('n', '1<CR>', M.nav_file(1));
-
-    local curr_file = utils.normalize_path(vim.api.nvim_buf_get_name(0))
-    vim.cmd(
-        string.format(
-            "autocmd Filetype harpoon "
-            .. "let path = '%s' | call clearmatches() | "
-            -- move the cursor to the line containing the current filename
-            .. "call search('\\V'.path.'\\$') | "
-            -- add a hl group to that line
-            .. "call matchadd('HarpoonCurrentFile', '\\V'.path.'\\$')",
-            curr_file:gsub("\\", "\\\\")
-        )
-    )
-
-    local win_info = create_window()
-    local contents = {}
-    local global_config = harpoon.get_global_settings()
-
-    Harpoon_win_id = win_info.win_id
-    Harpoon_bufh = win_info.bufnr
-
-    for idx = 1, Marked.get_length() do
-        local file = Marked.get_marked_file_name(idx)
-        if file == "" then
-            file = "(empty)"
-        end
-        contents[idx] = string.format("%s", file)
-    end
-
-    vim.api.nvim_win_set_option(Harpoon_win_id, "number", true)
-    vim.api.nvim_buf_set_name(Harpoon_bufh, "harpoon-menu")
-    vim.api.nvim_buf_set_lines(Harpoon_bufh, 0, #contents, false, contents)
-    vim.api.nvim_buf_set_option(Harpoon_bufh, "filetype", "harpoon")
-    vim.api.nvim_buf_set_option(Harpoon_bufh, "buftype", "acwrite")
-    vim.api.nvim_buf_set_option(Harpoon_bufh, "bufhidden", "delete")
-    vim.api.nvim_buf_set_keymap(
-        Harpoon_bufh,
-        "n",
-        "q",
-        "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<CR>",
-        { silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-        Harpoon_bufh,
-        "n",
-        "<ESC>",
-        "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<CR>",
-        { silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-        Harpoon_bufh,
-        "n",
-        "<CR>",
-        "<Cmd>lua require('harpoon.ui').select_menu_item()<CR>",
-        {}
-    )
-    vim.cmd(
-        string.format(
-            "autocmd BufWriteCmd <buffer=%s> lua require('harpoon.ui').on_menu_save()",
-            Harpoon_bufh
-        )
-    )
-    if global_config.save_on_change then
-        vim.cmd(
-            string.format(
-                "autocmd TextChanged,TextChangedI <buffer=%s> lua require('harpoon.ui').on_menu_save()",
-                Harpoon_bufh
-            )
-        )
-    end
-    vim.cmd(
-        string.format(
-            "autocmd BufModifiedSet <buffer=%s> set nomodified",
-            Harpoon_bufh
-        )
-    )
-    vim.cmd(
-        "autocmd BufLeave <buffer> ++nested ++once silent lua require('harpoon.ui').toggle_quick_menu()"
-    )
-end
 
 function M.select_menu_item()
     local idx = vim.fn.line(".")
@@ -306,6 +218,95 @@ function M.nav_prev()
     end
 
     M.nav_file(current_index)
+end
+
+function M.toggle_quick_menu()
+    log.trace("toggle_quick_menu()")
+    if Harpoon_win_id ~= nil and vim.api.nvim_win_is_valid(Harpoon_win_id) then
+        close_menu()
+        return
+    end
+
+    vim.keymap.set('n', '1<CR>', M.nav_file(1));
+
+    local curr_file = utils.normalize_path(vim.api.nvim_buf_get_name(0))
+    vim.cmd(
+        string.format(
+            "autocmd Filetype harpoon "
+            .. "let path = '%s' | call clearmatches() | "
+            -- move the cursor to the line containing the current filename
+            .. "call search('\\V'.path.'\\$') | "
+            -- add a hl group to that line
+            .. "call matchadd('HarpoonCurrentFile', '\\V'.path.'\\$')",
+            curr_file:gsub("\\", "\\\\")
+        )
+    )
+
+    local win_info = create_window()
+    local contents = {}
+    local global_config = harpoon.get_global_settings()
+
+    Harpoon_win_id = win_info.win_id
+    Harpoon_bufh = win_info.bufnr
+
+    for idx = 1, Marked.get_length() do
+        local file = Marked.get_marked_file_name(idx)
+        if file == "" then
+            file = "(empty)"
+        end
+        contents[idx] = string.format("%s", file)
+    end
+
+    vim.api.nvim_win_set_option(Harpoon_win_id, "number", true)
+    vim.api.nvim_buf_set_name(Harpoon_bufh, "harpoon-menu")
+    vim.api.nvim_buf_set_lines(Harpoon_bufh, 0, #contents, false, contents)
+    vim.api.nvim_buf_set_option(Harpoon_bufh, "filetype", "harpoon")
+    vim.api.nvim_buf_set_option(Harpoon_bufh, "buftype", "acwrite")
+    vim.api.nvim_buf_set_option(Harpoon_bufh, "bufhidden", "delete")
+    vim.api.nvim_buf_set_keymap(
+        Harpoon_bufh,
+        "n",
+        "q",
+        "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<CR>",
+        { silent = true }
+    )
+    vim.api.nvim_buf_set_keymap(
+        Harpoon_bufh,
+        "n",
+        "<ESC>",
+        "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<CR>",
+        { silent = true }
+    )
+    vim.api.nvim_buf_set_keymap(
+        Harpoon_bufh,
+        "n",
+        "<CR>",
+        "<Cmd>lua require('harpoon.ui').select_menu_item()<CR>",
+        {}
+    )
+    vim.cmd(
+        string.format(
+            "autocmd BufWriteCmd <buffer=%s> lua require('harpoon.ui').on_menu_save()",
+            Harpoon_bufh
+        )
+    )
+    if global_config.save_on_change then
+        vim.cmd(
+            string.format(
+                "autocmd TextChanged,TextChangedI <buffer=%s> lua require('harpoon.ui').on_menu_save()",
+                Harpoon_bufh
+            )
+        )
+    end
+    vim.cmd(
+        string.format(
+            "autocmd BufModifiedSet <buffer=%s> set nomodified",
+            Harpoon_bufh
+        )
+    )
+    vim.cmd(
+        "autocmd BufLeave <buffer> ++nested ++once silent lua require('harpoon.ui').toggle_quick_menu()"
+    )
 end
 
 return M
