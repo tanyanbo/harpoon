@@ -15,8 +15,6 @@ local function close_menu(force_save)
     force_save = force_save or false
     local global_config = harpoon.get_global_settings()
 
-    vim.keymap.del('n', '1<CR>')
-
     if global_config.save_on_toggle or force_save then
         require("harpoon.ui").on_menu_save()
     end
