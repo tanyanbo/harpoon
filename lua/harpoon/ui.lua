@@ -15,6 +15,8 @@ local function close_menu(force_save)
     force_save = force_save or false
     local global_config = harpoon.get_global_settings()
 
+    vim.api.nvim_del_keymap('n', '1<CR>')
+
     if global_config.save_on_toggle or force_save then
         require("harpoon.ui").on_menu_save()
     end
@@ -77,7 +79,7 @@ function M.toggle_quick_menu()
         return
     end
 
-    vim.keymap.set('n', '1<CR>', ':1<CR><CR>');
+    vim.keymap.set('n', '1<CR>', M.nav_file(1));
 
     local curr_file = utils.normalize_path(vim.api.nvim_buf_get_name(0))
     vim.cmd(
